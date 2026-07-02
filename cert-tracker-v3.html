@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="考照追蹤">
+<title>考照追蹤</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  --paper: #F2EEE3;
+  --paper-deep: #EAE4D3;
+  --ink: #1D2B3A;
+  --ink-soft: #3A4A5C;
+  --stamp-red: #B7282E;
+  --gold-seal: #9C7A2E;
+  --muted: #8B8578;
+  --line: #CFC7AE;
+  --white-card: #FBF9F2;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(29,43,58,0.05) 1px, transparent 0);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: 'Noto Sans TC', sans-serif;
+  padding: 32px 16px 80px;
+  min-height: 100vh;
+}
+
+.wrap{ max-width: 720px; margin: 0 auto; }
+
+.header{ text-align:center; margin-bottom: 20px; position: relative; }
+.eyebrow{
+  font-family:'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase;
+}
+.title{
+  font-family:'Noto Serif TC', serif; font-weight: 900; font-size: 34px;
+  margin: 6px 0 4px; letter-spacing: 2px;
+}
+.subtitle{ font-size: 13px; color: var(--ink-soft); }
+.rule{ width: 64px; height: 3px; background: var(--stamp-red); margin: 14px auto 0; }
+
+.save-note{
+  text-align:center; font-family:'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--muted); margin-top: 8px;
+  letter-spacing: 1px; min-height: 14px; transition: color .2s;
+}
+.save-note.flash{ color: #2E7D4F; }
+
+.stats{
+  display:flex; justify-content:center; gap:22px;
+  margin: 18px 0 20px; font-family:'JetBrains Mono', monospace; flex-wrap: wrap;
+}
+.stat{ text-align:center; }
+.stat .n{ font-size:22px; font-weight:700; }
+.stat .l{ font-size:10px; color:var(--muted); letter-spacing:1px; }
+
+/* Toolbar */
+.toolbar{
+  display:flex; justify-content:center; gap:8px; flex-wrap:wrap;
+  margin-bottom: 18px;
+}
+.tool-btn{
+  font-family:'JetBrains Mono', monospace; font-size:11px;
+  padding: 6px 12px; border-radius: 6px; cursor:pointer;
+  border: 1px solid var(--line); background: var(--white-card); color: var(--ink-soft);
+  letter-spacing: 0.5px;
+}
+.tool-btn:hover{ border-color: var(--ink); color: var(--ink); }
+
+.tabs{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom: 22px; }
+.tab{
+  font-family:'JetBrains Mono', monospace; font-size: 12px; padding: 6px 14px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--white-card);
+  color: var(--ink-soft); cursor:pointer; transition: all .15s ease;
+}
+.tab:hover{ border-color: var(--ink); }
+.tab.active{ background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.add-btn{
+  display:block; width:100%; font-family:'Noto Serif TC', serif;
+  font-weight:700; font-size:15px; padding: 13px; background: transparent;
+  border: 2px dashed var(--line); border-radius: 10px; color: var(--ink-soft);
+  cursor:pointer; margin-bottom: 22px; transition: all .15s ease; letter-spacing: 1px;
+}
+.add-btn:hover{ border-color: var(--stamp-red); color: var(--stamp-red); background: rgba(183,40,46,0.04);}
+
+/* Panel (backup/import) */
+.panel{
+  background: var(--white-card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 20px; margin-bottom: 22px; box-shadow: 0 2px 0 var(--line);
+}
+.panel h3{
+  font-family:'Noto Serif TC', serif; font-size:16px; margin:0 0 4px;
+}
+.panel p.hint{ font-size:12px; color:var(--muted); margin:0 0 14px; line-height:1.6; }
+.panel textarea{
+  width:100%; min-height:110px; padding:10px; border:1px solid var(--line);
+  border-radius:6px; background: var(--paper); font-family:'JetBrains Mono', monospace;
+  font-size:12px; color: var(--ink); resize: vertical;
+}
+.panel .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+
+/* Form */
+.form-ticket{
+  background: var(--white-card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 20px; margin-bottom: 22px; box-shadow: 0 2px 0 var(--line);
+}
+.form-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.form-row{ margin-bottom: 12px; }
+.form-row.full{ grid-column: 1 / -1; }
+.form-row label{
+  display:block; font-size:11px; color:var(--muted);
+  font-family:'JetBrains Mono', monospace; letter-spacing:1px; margin-bottom: 4px;
+}
+.form-row input, .form-row select, .form-row textarea{
+  width:100%; padding: 9px 10px; border:1px solid var(--line); border-radius:6px;
+  background: var(--paper); font-family:'Noto Sans TC', sans-serif; font-size: 14px; color: var(--ink);
+}
+.form-row textarea{ resize: vertical; min-height:56px; }
+.form-actions{ display:flex; gap:8px; margin-top: 6px; }
+.btn{
+  font-family:'Noto Sans TC', sans-serif; font-weight:700; font-size: 13px;
+  padding: 9px 18px; border-radius: 6px; border: none; cursor:pointer;
+}
+.btn-primary{ background: var(--ink); color: var(--paper); }
+.btn-primary:hover{ background: var(--stamp-red); }
+.btn-ghost{ background: transparent; color: var(--muted); border:1px solid var(--line); }
+.btn-ghost:hover{ color: var(--ink); border-color: var(--ink); }
+
+/* Ticket */
+.ticket{
+  display:flex; background: var(--white-card); border: 1px solid var(--line);
+  border-radius: 10px; margin-bottom: 16px; overflow: hidden; position: relative;
+  box-shadow: 0 2px 0 var(--line);
+}
+.ticket.passed{ opacity: 0.88; }
+.stub{
+  width: 92px; flex-shrink:0; background: var(--paper-deep);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 12px 6px; border-right: 2px dashed var(--line); position:relative;
+}
+.stub .days-n{
+  font-family:'JetBrains Mono', monospace; font-size: 22px; font-weight:700;
+  color: var(--ink); line-height:1; text-align:center;
+}
+.stub .days-l{
+  font-family:'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+  letter-spacing:1px; margin-top:3px;
+}
+.stub.overdue .days-n{ color: var(--stamp-red); }
+.stub.na .days-n{ font-size: 13px; color: var(--muted); }
+.punch{ position:absolute; width:10px; height:10px; border-radius:50%; background: var(--paper); left:-5px; }
+.punch.top{ top:-5px; } .punch.bottom{ bottom:-5px; }
+.body{ flex:1; padding: 14px 16px; cursor: pointer; }
+.body-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.cert-name{ font-family:'Noto Serif TC', serif; font-weight:700; font-size:17px; color: var(--ink); }
+.cert-org{ font-size: 12px; color: var(--muted); margin-top:2px; }
+.status-pill{
+  font-family:'JetBrains Mono', monospace; font-size: 10px; padding: 3px 9px;
+  border-radius: 999px; white-space:nowrap; letter-spacing:0.5px; border: 1px solid currentColor;
+}
+.s-未開始{ color: var(--muted); }
+.s-準備中{ color: #7A5C1E; }
+.s-已報名{ color: #2A5A7A; }
+.s-已應試{ color: var(--gold-seal); }
+.s-已通過{ color: #2E7D4F; }
+.s-未通過{ color: var(--stamp-red); }
+.meta-line{
+  font-family:'JetBrains Mono', monospace; font-size:12px; color: var(--ink-soft);
+  margin-top: 8px; display:flex; flex-wrap:wrap; gap: 4px 16px;
+}
+.meta-line .fee{ color: var(--gold-seal); }
+.cert-notes{
+  font-size: 13px; color: var(--ink-soft); margin-top: 8px; line-height:1.5;
+  white-space:pre-wrap; display:none;
+}
+.ticket.expanded .cert-notes{ display:block; }
+.ticket-actions{ display:none; gap:8px; margin-top:10px; }
+.ticket.expanded .ticket-actions{ display:flex; }
+.mini-btn{
+  font-family:'JetBrains Mono', monospace; font-size: 11px; padding: 5px 10px;
+  border-radius:5px; cursor:pointer; border: 1px solid var(--line);
+  background: var(--paper); color: var(--ink-soft);
+}
+.mini-btn:hover{ border-color: var(--ink); color: var(--ink); }
+.mini-btn.danger:hover{ border-color: var(--stamp-red); color: var(--stamp-red); }
+.seal{
+  position:absolute; top: 8px; right: -18px; width: 76px; height:76px;
+  border: 3px solid var(--stamp-red); border-radius:50%; color: var(--stamp-red);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Noto Serif TC', serif; font-weight:900; font-size:15px;
+  transform: rotate(18deg); opacity: 0.85; pointer-events:none; background: rgba(183,40,46,0.03);
+}
+.empty{
+  text-align:center; padding: 50px 20px; border: 2px dashed var(--line);
+  border-radius: 12px; color: var(--muted);
+}
+.empty .big{ font-family:'Noto Serif TC', serif; font-size:16px; color: var(--ink-soft); margin-bottom:6px; }
+
+@media (max-width: 480px){
+  .title{ font-size: 26px; }
+  .stub{ width: 74px; }
+  .seal{ width:60px; height:60px; font-size:12px; right:-14px; }
+  .form-grid{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="eyebrow">CERTIFICATION ADMISSION TRACKER</div>
+    <div class="title">考 照 追 蹤</div>
+    <div class="subtitle">求職 × 證照，一張一張蓋章</div>
+    <div class="rule"></div>
+    <div class="save-note" id="saveNote"></div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="tool-btn" id="exportBtn">⤓ 匯出備份</div>
+    <div class="tool-btn" id="importBtn">⤒ 匯入資料</div>
+  </div>
+
+  <div id="panelArea"></div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <button class="add-btn" id="openFormBtn">＋ 新增一張准考證</button>
+
+  <div id="formArea"></div>
+
+  <div id="list"></div>
+
+</div>
+
+<script>
+const STATUSES = ['未開始','準備中','已報名','已應試','已通過','未通過'];
+const STORE_KEY = 'cert-tracker-data';
+let certs = [];
+let filter = '全部';
+let expandedId = null;
+
+const hasClaudeStorage = typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function';
+
+async function loadData(){
+  let loaded = null;
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) loaded = JSON.parse(raw);
+  }catch(e){}
+  if(hasClaudeStorage){
+    try{
+      const res = await window.storage.get(STORE_KEY, false);
+      if(res && res.value){
+        const cloudData = JSON.parse(res.value);
+        if(!loaded || (cloudData._savedAt || 0) > (loaded._savedAt || 0)){
+          loaded = cloudData;
+        }
+      }
+    }catch(e){}
+  }
+  certs = (loaded && Array.isArray(loaded.items)) ? loaded.items : [];
+  render();
+}
+
+async function saveData(silent){
+  const payload = JSON.stringify({ _savedAt: Date.now(), items: certs });
+  let ok = false;
+  try{ localStorage.setItem(STORE_KEY, payload); ok = true; }catch(e){}
+  if(hasClaudeStorage){
+    try{ await window.storage.set(STORE_KEY, payload, false); ok = true; }catch(e){}
+  }
+  if(!silent){
+    const note = document.getElementById('saveNote');
+    if(ok){
+      note.textContent = '✓ 已儲存 ' + new Date().toLocaleTimeString('zh-TW',{hour12:false});
+      note.classList.add('flash');
+      setTimeout(()=>note.classList.remove('flash'), 1200);
+    }else{
+      note.textContent = '⚠ 儲存失敗，請用「匯出備份」保存資料';
+    }
+  }
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  return Math.round((target - today) / 86400000);
+}
+function genId(){ return 'c' + Date.now() + Math.random().toString(36).slice(2,7); }
+function fmtFee(v){
+  if(v===undefined || v===null || v==='') return '';
+  const n = Number(v);
+  if(isNaN(n)) return escapeHtml(String(v));
+  return 'NT$ ' + n.toLocaleString('zh-TW');
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+
+/* ============ 匯出 / 匯入 ============ */
+function openExport(){
+  const data = JSON.stringify({ _savedAt: Date.now(), items: certs });
+  document.getElementById('panelArea').innerHTML = `
+    <div class="panel">
+      <h3>⤓ 匯出備份</h3>
+      <p class="hint">下面這段就是妳所有的證照資料。<b>複製它</b>（或按「下載檔案」），到新裝置／新網址打開本工具後，用「匯入資料」貼上即可搬家。</p>
+      <textarea id="exportText" readonly>${escapeHtml(data)}</textarea>
+      <div class="row">
+        <button class="btn btn-primary" id="copyBtn">複製到剪貼簿</button>
+        <button class="btn btn-ghost" id="downloadBtn">下載成檔案</button>
+        <button class="btn btn-ghost" id="closePanel">關閉</button>
+      </div>
+    </div>`;
+  document.getElementById('exportText').select();
+  document.getElementById('copyBtn').onclick = ()=>{
+    const t = document.getElementById('exportText');
+    t.select();
+    try{
+      navigator.clipboard.writeText(t.value);
+    }catch(e){ document.execCommand('copy'); }
+    document.getElementById('copyBtn').textContent = '✓ 已複製';
+    setTimeout(()=>{ const b=document.getElementById('copyBtn'); if(b) b.textContent='複製到剪貼簿'; }, 1500);
+  };
+  document.getElementById('downloadBtn').onclick = ()=>{
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '考照追蹤備份_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  document.getElementById('closePanel').onclick = ()=>{ document.getElementById('panelArea').innerHTML=''; };
+  document.getElementById('panelArea').scrollIntoView({behavior:'smooth'});
+}
+
+function openImport(){
+  document.getElementById('panelArea').innerHTML = `
+    <div class="panel">
+      <h3>⤒ 匯入資料</h3>
+      <p class="hint">把「匯出備份」得到的那段文字<b>貼在下面</b>，或選擇之前下載的 .json 檔案，然後按「匯入」。<br>匯入會<b>覆蓋</b>目前的資料，建議先確認。</p>
+      <textarea id="importText" placeholder="在這裡貼上備份文字…"></textarea>
+      <div class="row">
+        <input type="file" id="importFile" accept=".json,application/json" style="font-size:12px;">
+      </div>
+      <div class="row">
+        <button class="btn btn-primary" id="doImport">匯入（覆蓋現有資料）</button>
+        <button class="btn btn-ghost" id="closePanel2">關閉</button>
+      </div>
+    </div>`;
+  document.getElementById('importFile').onchange = (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ document.getElementById('importText').value = reader.result; };
+    reader.readAsText(file);
+  };
+  document.getElementById('doImport').onclick = async ()=>{
+    const txt = document.getElementById('importText').value.trim();
+    if(!txt){ alert('請先貼上備份文字或選擇檔案'); return; }
+    let parsed;
+    try{ parsed = JSON.parse(txt); }catch(e){ alert('格式不正確，請確認貼上的是完整的備份文字'); return; }
+    const items = Array.isArray(parsed) ? parsed : parsed.items;
+    if(!Array.isArray(items)){ alert('找不到資料內容，請確認備份文字是否完整'); return; }
+    if(!confirm(`即將匯入 ${items.length} 筆證照資料，並覆蓋目前的內容。確定嗎？`)) return;
+    certs = items.map(c=> c.id ? c : {id: genId(), ...c});
+    await saveData();
+    document.getElementById('panelArea').innerHTML='';
+    render();
+    alert('匯入完成！');
+  };
+  document.getElementById('closePanel2').onclick = ()=>{ document.getElementById('panelArea').innerHTML=''; };
+  document.getElementById('panelArea').scrollIntoView({behavior:'smooth'});
+}
+
+/* ============ 畫面 ============ */
+function renderStats(){
+  const total = certs.length;
+  const passed = certs.filter(c=>c.status==='已通過').length;
+  const inProgress = certs.filter(c=>['準備中','已報名','已應試'].includes(c.status)).length;
+  const totalFee = certs.reduce((sum,c)=>{ const n=Number(c.fee); return sum+(isNaN(n)?0:n); },0);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${total}</div><div class="l">總數</div></div>
+    <div class="stat"><div class="n">${inProgress}</div><div class="l">進行中</div></div>
+    <div class="stat"><div class="n">${passed}</div><div class="l">已通過</div></div>
+    <div class="stat"><div class="n">${totalFee?totalFee.toLocaleString('zh-TW'):0}</div><div class="l">報名費合計 NT$</div></div>
+  `;
+}
+function renderTabs(){
+  const cats = ['全部','未開始','準備中','已報名','已應試','已通過','未通過'];
+  document.getElementById('tabs').innerHTML = cats.map(c=>{
+    const count = c==='全部' ? certs.length : certs.filter(x=>x.status===c).length;
+    return `<div class="tab ${filter===c?'active':''}" data-cat="${c}">${c}${count?` (${count})`:''}</div>`;
+  }).join('');
+  document.querySelectorAll('.tab').forEach(t=>{ t.onclick=()=>{ filter=t.dataset.cat; render(); }; });
+}
+function renderForm(existing){
+  const isEdit = !!existing;
+  const c = existing || {name:'', org:'', courseStart:'', examDate:'', fee:'', status:'未開始', notes:''};
+  document.getElementById('formArea').innerHTML = `
+    <div class="form-ticket">
+      <div class="form-grid">
+        <div class="form-row full"><label>證照名稱</label>
+          <input type="text" id="f-name" value="${escapeAttr(c.name)}" placeholder="例如：諮商心理師"></div>
+        <div class="form-row full"><label>主辦單位（選填）</label>
+          <input type="text" id="f-org" value="${escapeAttr(c.org)}" placeholder="例如：考選部"></div>
+        <div class="form-row"><label>上課開始日期（選填）</label>
+          <input type="date" id="f-course" value="${c.courseStart||''}"></div>
+        <div class="form-row"><label>考試日期（選填）</label>
+          <input type="date" id="f-date" value="${c.examDate||''}"></div>
+        <div class="form-row"><label>報名費用 NT$（選填）</label>
+          <input type="number" id="f-fee" value="${c.fee!==undefined&&c.fee!==null?escapeAttr(String(c.fee)):''}" placeholder="例如：1500" min="0"></div>
+        <div class="form-row"><label>目前狀態</label>
+          <select id="f-status">${STATUSES.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-row full"><label>準備進度 / 備註</label>
+          <textarea id="f-notes" placeholder="讀書進度、報名資訊、心得...">${escapeHtml(c.notes)}</textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="saveBtn">${isEdit?'儲存修改':'新增'}</button>
+        <button class="btn btn-ghost" id="cancelBtn">取消</button>
+      </div>
+    </div>`;
+  document.getElementById('saveBtn').onclick = async ()=>{
+    const name = document.getElementById('f-name').value.trim();
+    if(!name){ alert('請輸入證照名稱'); return; }
+    const feeRaw = document.getElementById('f-fee').value.trim();
+    const data = {
+      name,
+      org: document.getElementById('f-org').value.trim(),
+      courseStart: document.getElementById('f-course').value,
+      examDate: document.getElementById('f-date').value,
+      fee: feeRaw==='' ? '' : Number(feeRaw),
+      status: document.getElementById('f-status').value,
+      notes: document.getElementById('f-notes').value.trim()
+    };
+    if(isEdit){ Object.assign(existing, data); }
+    else{ certs.push({ id: genId(), ...data }); }
+    await saveData();
+    document.getElementById('formArea').innerHTML='';
+    render();
+  };
+  document.getElementById('cancelBtn').onclick = ()=>{ document.getElementById('formArea').innerHTML=''; };
+}
+function statusStub(c){
+  if(c.status==='已通過') return {label:'已上榜', cls:'na', n:'✓'};
+  if(c.status==='未通過') return {label:'再接再厲', cls:'na', n:'—'};
+  const d = daysUntil(c.examDate);
+  if(d===null) return {label:'未定日期', cls:'na', n:'—'};
+  if(d < 0) return {label:'已過期', cls:'overdue', n: Math.abs(d)+'天前'};
+  if(d === 0) return {label:'就是今天', cls:'overdue', n:'D-DAY'};
+  return {label:'倒數', cls:'', n: 'D-'+d};
+}
+function renderList(){
+  let items = filter==='全部' ? certs.slice() : certs.filter(c=>c.status===filter);
+  items.sort((a,b)=>{
+    const da = daysUntil(a.examDate), db = daysUntil(b.examDate);
+    const ra = a.status==='已通過'||a.status==='未通過' ? 2 : (da===null?1:0);
+    const rb = b.status==='已通過'||b.status==='未通過' ? 2 : (db===null?1:0);
+    if(ra!==rb) return ra-rb;
+    if(ra===0) return da-db;
+    return 0;
+  });
+  const listEl = document.getElementById('list');
+  if(items.length===0){
+    listEl.innerHTML = `<div class="empty"><div class="big">還沒有任何證照</div>點上方「＋ 新增一張准考證」開始追蹤</div>`;
+    return;
+  }
+  listEl.innerHTML = items.map(c=>{
+    const stub = statusStub(c);
+    const expanded = expandedId===c.id;
+    const metaParts = [];
+    if(c.courseStart) metaParts.push(`上課開始　${c.courseStart}`);
+    if(c.examDate) metaParts.push(`考試日期　${c.examDate}`);
+    if(c.fee!=='' && c.fee!==undefined && c.fee!==null) metaParts.push(`<span class="fee">報名費　${fmtFee(c.fee)}</span>`);
+    return `
+      <div class="ticket ${c.status==='已通過'?'passed':''} ${expanded?'expanded':''}" data-id="${c.id}">
+        <div class="punch top"></div><div class="punch bottom"></div>
+        <div class="stub ${stub.cls}">
+          <div class="days-n">${stub.n||''}</div>
+          <div class="days-l">${stub.label}</div>
+        </div>
+        <div class="body" data-toggle="${c.id}">
+          <div class="body-top">
+            <div>
+              <div class="cert-name">${escapeHtml(c.name)}</div>
+              ${c.org?`<div class="cert-org">${escapeHtml(c.org)}</div>`:''}
+            </div>
+            <div class="status-pill s-${c.status}">${c.status}</div>
+          </div>
+          ${metaParts.length?`<div class="meta-line">${metaParts.join('')}</div>`:''}
+          ${c.notes?`<div class="cert-notes">${escapeHtml(c.notes)}</div>`:''}
+          <div class="ticket-actions">
+            <div class="mini-btn" data-edit="${c.id}">編輯</div>
+            <div class="mini-btn" data-cycle="${c.id}">切換狀態</div>
+            <div class="mini-btn danger" data-del="${c.id}">刪除</div>
+          </div>
+        </div>
+        ${c.status==='已通過'?'<div class="seal">已通過</div>':''}
+      </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-toggle]').forEach(el=>{
+    el.onclick = (e)=>{
+      if(e.target.closest('.ticket-actions')) return;
+      const id = el.dataset.toggle;
+      expandedId = expandedId===id ? null : id;
+      render();
+    };
+  });
+  listEl.querySelectorAll('[data-edit]').forEach(el=>{
+    el.onclick = (e)=>{
+      e.stopPropagation();
+      const c = certs.find(x=>x.id===el.dataset.edit);
+      renderForm(c);
+      document.getElementById('formArea').scrollIntoView({behavior:'smooth'});
+    };
+  });
+  listEl.querySelectorAll('[data-cycle]').forEach(el=>{
+    el.onclick = async (e)=>{
+      e.stopPropagation();
+      const c = certs.find(x=>x.id===el.dataset.cycle);
+      const idx = STATUSES.indexOf(c.status);
+      c.status = STATUSES[(idx+1)%STATUSES.length];
+      await saveData();
+      render();
+    };
+  });
+  listEl.querySelectorAll('[data-del]').forEach(el=>{
+    el.onclick = async (e)=>{
+      e.stopPropagation();
+      if(confirm('確定要刪除這張證照紀錄嗎？')){
+        certs = certs.filter(x=>x.id!==el.dataset.del);
+        await saveData();
+        render();
+      }
+    };
+  });
+}
+function render(){ renderStats(); renderTabs(); renderList(); }
+
+document.getElementById('openFormBtn').onclick = ()=>{
+  renderForm(null);
+  document.getElementById('formArea').scrollIntoView({behavior:'smooth'});
+};
+document.getElementById('exportBtn').onclick = openExport;
+document.getElementById('importBtn').onclick = openImport;
+
+loadData();
+</script>
+</body>
+</html>
